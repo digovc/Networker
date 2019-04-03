@@ -12,7 +12,7 @@ namespace Networker.Extensions.Json
 
 		public bool CanReadOffset => false;
 
-		public T Deserialise<T>(byte[] packetBytes)
+		public T Deserialise<T>(byte[] packetBytes) where T : class
 		{
 			return JsonSerializer.Deserialize<T>(packetBytes);
 		}
@@ -24,10 +24,23 @@ namespace Networker.Extensions.Json
 
 		public byte[] Package(string name, byte[] bytes)
 		{
-			return new byte[] { };
+			using (var memoryStream = new MemoryStream())
+			{
+				using (var binaryWriter = new BinaryWriter(memoryStream))
+				{
+					var nameBytes = Encoding.ASCII.GetBytes(name);
+					binaryWriter.Write(nameBytes.Length);
+					binaryWriter.Write(bytes.Length);
+					binaryWriter.Write(nameBytes);
+					binaryWriter.Write(bytes);
+				}
+
+				var packetBytes = memoryStream.ToArray();
+				return packetBytes;
+			}
 		}
 
-		public byte[] Serialise<T>(T packet)
+		public byte[] Serialise<T>(T packet) where T : class
 		{
 			using (var memoryStream = new MemoryStream())
 			{

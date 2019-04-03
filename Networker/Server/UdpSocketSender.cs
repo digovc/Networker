@@ -15,7 +15,7 @@ namespace Networker.Server
 			_packetSerialiser = packetSerialiser;
 		}
 
-		public void Broadcast<T>(T packet)
+		public void Broadcast<T>(T packet) where T : class
 		{
 			var socket = _udpSocketListener.GetSocket();
 			var serialisedPacket = _packetSerialiser.Serialise(packet);
@@ -28,7 +28,7 @@ namespace Networker.Server
 			socket.SendTo(packetBytes, endpoint);
 		}
 
-		public void SendTo<T>(T packet, IPEndPoint endpoint)
+		public void SendTo<T>(T packet, IPEndPoint endpoint) where T : class
 		{
 			var socket = _udpSocketListener.GetSocket();
 			var serialisedPacket = _packetSerialiser.Serialise(packet);

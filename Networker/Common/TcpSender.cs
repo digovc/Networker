@@ -17,7 +17,7 @@ namespace Networker.Common
 
 		public IPEndPoint EndPoint => Socket.RemoteEndPoint as IPEndPoint;
 
-		public void Send<T>(T packet)
+		public void Send<T>(T packet) where T : class
 		{
 			Socket.Send(_packetSerialiser.Serialise(packet));
 		}

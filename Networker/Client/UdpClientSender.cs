@@ -14,7 +14,7 @@ namespace Networker.Client
 			clientPacketProcessor.SetUdpSocketSender(this);
 		}
 
-		public void Broadcast<T>(T packet)
+		public void Broadcast<T>(T packet) where T : class
 		{
 			_client.SendUdp(packet);
 		}
@@ -24,7 +24,7 @@ namespace Networker.Client
 			_client.SendUdp(packetBytes);
 		}
 
-		public void SendTo<T>(T packet, IPEndPoint endpoint)
+		public void SendTo<T>(T packet, IPEndPoint endpoint) where T : class
 		{
 			_client.SendUdp(packet);
 		}

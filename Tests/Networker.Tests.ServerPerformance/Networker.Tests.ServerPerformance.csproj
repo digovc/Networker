@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.11.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="2.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Demos\Demo.Common\Demo.Common.csproj" />
+    <ProjectReference Include="..\..\Extensions\Networker.Extensions.Json\Networker.Extensions.Json.csproj" />
+    <ProjectReference Include="..\..\Networker\Networker.csproj" />
+  </ItemGroup>
+
+</Project>

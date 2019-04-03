@@ -23,7 +23,7 @@ namespace Networker.Extensions.ProtobufNet
 
 		public bool CanReadOffset => false; //Was TRUE
 
-		public T Deserialise<T>(byte[] packetBytes)
+		public T Deserialise<T>(byte[] packetBytes) where T : class
 		{
 			/*var memoryStream = memoryStreamObjectPool.Pop();
 
@@ -48,7 +48,7 @@ namespace Networker.Extensions.ProtobufNet
 			return new byte[] { };
 		}
 
-		public byte[] Serialise<T>(T packet)
+		public byte[] Serialise<T>(T packet) where T : class
 		{
 			var memoryStream = memoryStreamObjectPool.Pop();
 

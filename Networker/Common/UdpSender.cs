@@ -17,7 +17,7 @@ namespace Networker.Common
 
 		public IPEndPoint EndPoint => RemoteEndpoint as IPEndPoint;
 
-		public void Send<T>(T packet)
+		public void Send<T>(T packet) where T : class
 		{
 			_socketSender.SendTo(packet, EndPoint);
 		}

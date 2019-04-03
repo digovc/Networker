@@ -96,7 +96,7 @@ namespace Networker.Client
         }
 
         /// <inheritdoc />
-        public void Send<T>(T packet) => Send(this.packetSerialiser.Serialise(packet));
+        public void Send<T>(T packet) where T : class => Send(this.packetSerialiser.Serialise(packet));
 
         /// <inheritdoc />
         public void Send(byte[] packet)
@@ -110,7 +110,7 @@ namespace Networker.Client
         }
 
         /// <inheritdoc />
-        public void SendUdp<T>(T packet) => SendUdp(this.packetSerialiser.Serialise(packet));
+        public void SendUdp<T>(T packet) where T : class => SendUdp(this.packetSerialiser.Serialise(packet));
 
         /// <inheritdoc />
         public void SendUdp(byte[] packet)

@@ -12,6 +12,7 @@ namespace Networker.Server
         public ITcpSocketListener TcpListener { get; }
         public IUdpSocketListener UdpListener { get; }
         public IServerInformation Information { get; }
+        public IServiceProvider ServiceProvider { get; }
 
         public EventHandler<TcpConnectionConnectedEventArgs> ClientConnected { get; set; }
         public EventHandler<TcpConnectionDisconnectedEventArgs> ClientDisconnected { get; set; }
@@ -28,11 +29,13 @@ namespace Networker.Server
             IUdpSocketListener udpSocketListener,
             IBufferManager bufferManager,
             IServerInformation serverInformation,
-            IPacketSerialiser packetSerialiser)
+            IPacketSerialiser packetSerialiser,
+            IServiceProvider serviceProvider)
         {
             this.options = options;
             this.tcpConnections = tcpConnections;
             Information = serverInformation;
+            ServiceProvider = serviceProvider;
             this.packetSerialiser = packetSerialiser;
             bufferManager.InitBuffer();
 
@@ -50,6 +53,8 @@ namespace Networker.Server
                     eventArgs.InvalidTcpPackets = serverInformation.InvalidTcpPackets;
                     eventArgs.ProcessedUdpPackets = serverInformation.ProcessedUdpPackets;
                     eventArgs.InvalidUdpPackets = serverInformation.InvalidUdpPackets;
+                    eventArgs.TcpBytes = serverInformation.TcpBytes;
+                    eventArgs.UdpBytes = serverInformation.UdpBytes;
                     eventArgs.TcpConnections = tcpConnections.GetConnections().Count;
 
                     ServerInformationUpdated?.Invoke(this, eventArgs);
@@ -64,7 +69,7 @@ namespace Networker.Server
             });
         }
 
-        public void Broadcast<T>(T packet) => Broadcast(packetSerialiser.Serialise(packet));
+        public void Broadcast<T>(T packet) where T : class => Broadcast(packetSerialiser.Serialise(packet));
         public void Broadcast(byte[] packet)
         {
             if (UdpListener == null) throw new Exception("UDP is not enabled");

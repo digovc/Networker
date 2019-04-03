@@ -16,17 +16,24 @@ namespace Networker.Common.Abstractions
 
 		IServiceProvider GetServiceProvider();
 
-		//TBuilder RegisterMiddleware<T>()
-		//	where T : class, IMiddlewareHandler;
+		TBuilder RegisterMiddleware<T>()
+			where T : class, IMiddlewareHandler;
 
 		//Packet Handler
 		TBuilder RegisterPacketHandler<TPacket, TPacketHandler>()
 			where TPacket : class where TPacketHandler : IPacketHandler;
 
+		[Obsolete("Please use the new IPacketModule")]
 		TBuilder RegisterPacketHandlerModule(IPacketHandlerModule packetHandlerModule);
-
+		
+		[Obsolete("Please use the new IPacketModule")]
 		TBuilder RegisterPacketHandlerModule<T>()
 			where T : IPacketHandlerModule;
+		
+		TBuilder RegisterModule(IPacketModule packetHandlerModule);
+
+		TBuilder RegisterModule<T>()
+			where T : IPacketModule;
 
 		TBuilder RegisterTypes(Action<IServiceCollection> serviceCollection);
 

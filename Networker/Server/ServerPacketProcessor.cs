@@ -50,7 +50,10 @@ namespace Networker.Server
 			packetContextObjectPool = new ObjectPool<IPacketContext>(options.TcpMaxConnections * 2);
 
 			for (var i = 0; i < packetContextObjectPool.Capacity; i++)
-				packetContextObjectPool.Push(new PacketContext());
+				packetContextObjectPool.Push(new PacketContext
+				{
+					Serialiser = packetSerialiser
+				});
 		}
 
 		public async Task ProcessFromBuffer(ISender sender,
@@ -104,7 +107,6 @@ namespace Networker.Server
 						else
 							serverInformation.InvalidUdpPackets++;
 
-						logger.Error(new Exception("Packet was lost - Invalid"));
 						return;
 					}
 
@@ -113,7 +115,6 @@ namespace Networker.Server
 					var packetContext = packetContextObjectPool.Pop();
 					packetContext.PacketName = packetTypeName;
 					packetContext.Sender = sender;
-					packetContext.Serialiser = packetSerialiser;
 					packetContext.Handler = packetHandler;
 
 					if (packetSerialiser.CanReadOffset)
@@ -149,6 +150,13 @@ namespace Networker.Server
 					serverInformation.ProcessedTcpPackets++;
 				else
 					serverInformation.ProcessedUdpPackets++;
+			}
+
+			if (isTcp)
+				serverInformation.TcpBytes += buffer.Length;
+			else
+			{
+				serverInformation.UdpBytes += buffer.Length;
 			}
 		}
 

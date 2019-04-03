@@ -5,6 +5,6 @@ namespace Networker.Common.Abstractions
 	public interface ISender
 	{
 		IPEndPoint EndPoint { get; }
-		void Send<T>(T packet);
+		void Send<T>(T packet) where T : class;
 	}
 }

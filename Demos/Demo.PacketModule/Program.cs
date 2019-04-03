@@ -7,13 +7,14 @@ using Networker.Client;
 using Networker.Extensions.Json;
 using Networker.Server;
 
-namespace Demo.Basic
+namespace Demo.PacketModule
 {
-	internal class Program
+	class Program
 	{
-		private static void Main(string[] args)
+		static void Main(string[] args)
 		{
-			var server = new ServerBuilder().UseTcp(1000)
+			var server = new ServerBuilder()
+				.UseTcp(1000)
 				.UseUdp(5000)
 				.UseJson()
 				.ConfigureLogging(loggingBuilder =>
@@ -22,17 +23,20 @@ namespace Demo.Basic
 					loggingBuilder.SetMinimumLevel(
 						LogLevel.Debug);
 				})
-				.RegisterPacketHandler<BasicPacket, BasicPacketHandler>()
+				.RegisterModule<BasicPacketModule>()
+				.RegisterModule<BasicServerPacketModule>()
 				.Build();
 
 			server.Start();
 
 			try
 			{
-				var client = new ClientBuilder().UseIp("127.0.0.1")
+				var client = new ClientBuilder()
+					.UseIp("127.0.0.1")
 					.UseTcp(1000)
 					.UseUdp(5000)
 					.UseJson()
+					.RegisterModule<BasicPacketModule>()
 					.Build();
 
 				client.Connect();

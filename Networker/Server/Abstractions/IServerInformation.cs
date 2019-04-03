@@ -4,10 +4,12 @@
     {
         bool IsRunning { get; set; }
 
-        int InvalidTcpPackets { get; set; }
-        int ProcessedTcpPackets { get; set; }
+        long InvalidTcpPackets { get; set; }
+        long ProcessedTcpPackets { get; set; }
 
-        int InvalidUdpPackets { get; set; }
-        int ProcessedUdpPackets { get; set; }
+        long InvalidUdpPackets { get; set; }
+        long ProcessedUdpPackets { get; set; }
+        long TcpBytes { get; set; }
+        long UdpBytes { get; set; }
     }
 }

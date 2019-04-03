@@ -13,7 +13,7 @@ namespace Networker.Extensions.ZeroFormatter
 
 		public bool CanReadOffset => false;
 
-		public T Deserialise<T>(byte[] packetBytes)
+		public T Deserialise<T>(byte[] packetBytes) where T : class
 		{
 			return ZeroFormatterSerializer.Deserialize<T>(packetBytes);
 		}
@@ -41,7 +41,7 @@ namespace Networker.Extensions.ZeroFormatter
 			}
 		}
 
-		public byte[] Serialise<T>(T packet)
+		public byte[] Serialise<T>(T packet) where T : class
 		{
 			using (var memoryStream = new MemoryStream())
 			{

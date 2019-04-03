@@ -4,10 +4,12 @@ namespace Networker.Server
 {
 	public class ServerInformationEventArgs : EventArgs
 	{
-		public int InvalidTcpPackets { get; set; }
-		public int InvalidUdpPackets { get; set; }
-		public int ProcessedTcpPackets { get; set; }
-		public int ProcessedUdpPackets { get; set; }
-		public int TcpConnections { get; set; }
+		public long InvalidTcpPackets { get; set; }
+		public long InvalidUdpPackets { get; set; }
+		public long ProcessedTcpPackets { get; set; }
+		public long ProcessedUdpPackets { get; set; }
+		public long TcpConnections { get; set; }
+		public long TcpBytes { get; set; }
+		public long UdpBytes { get; set; }
 	}
 }

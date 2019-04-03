@@ -12,7 +12,7 @@ namespace Networker.DefaultFormatter
 
 		public bool CanReadOffset => false;
 
-		public T Deserialise<T>(byte[] packetBytes)
+		public T Deserialise<T>(byte[] packetBytes)where T : class
 		{
 			throw new NotImplementedException();
 		}
@@ -28,7 +28,7 @@ namespace Networker.DefaultFormatter
 			throw new NotImplementedException();
 		}
 
-		public byte[] Serialise<T>(T packet)
+		public byte[] Serialise<T>(T packet)where T : class
 		{
 			throw new NotImplementedException();
 			var bf = new BinaryFormatter();
