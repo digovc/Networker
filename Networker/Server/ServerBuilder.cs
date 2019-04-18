@@ -2,6 +2,8 @@
 using Networker.Common.Abstractions;
 using Networker.Server.Abstractions;
 using System;
+using System.Collections.Generic;
+using Networker.Common;
 
 namespace Networker.Server
 {
@@ -19,6 +21,7 @@ namespace Networker.Server
         {
             this.SetupSharedDependencies();
 
+            this.serviceCollection.AddSingleton<IPacketModuleBuilder, PacketModuleBuilder>();
             this.serviceCollection.AddSingleton<ITcpConnections, TcpConnections>();
             this.serviceCollection.AddSingleton<IServer, Server>();
             this.serviceCollection.AddSingleton<IServerInformation, ServerInformation>();
@@ -40,8 +43,12 @@ namespace Networker.Server
 
             this.serviceCollection.AddSingleton<IUdpSocketListener>(collection => collection.GetService<IUdpSocketListenerFactory>().Create());
 
-
             var serviceProvider = this.GetServiceProvider();
+
+            foreach (var module in serviceProvider.GetService<IEnumerable<IPacketModule>>())
+            {
+                module.Register(serviceProvider.GetService<IPacketModuleBuilder>());
+            }
 
             return serviceProvider.GetService<IServer>();
         }

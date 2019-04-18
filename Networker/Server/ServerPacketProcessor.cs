@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -17,22 +18,22 @@ namespace Networker.Server
 		private readonly ILogger logger;
 		private readonly List<IMiddlewareHandler> middlewares;
 		private readonly ObjectPool<IPacketContext> packetContextObjectPool;
-		private readonly IPacketHandlers packetHandlers;
 		private readonly IPacketSerialiser packetSerialiser;
 		private readonly IServerInformation serverInformation;
 		private readonly ObjectPool<ISender> tcpSenderObjectPool;
 		private readonly ObjectPool<ISender> udpSenderObjectPool;
 		private IUdpSocketSender _socketSender;
+        private readonly IPacketRegistry[] _packetRegistries;
 
 		public ServerPacketProcessor(ServerBuilderOptions options,
 			ILogger<ServerPacketProcessor> logger,
 			IPacketHandlers packetHandlers,
 			IServerInformation serverInformation,
 			IPacketSerialiser packetSerialiser,
-			IEnumerable<IMiddlewareHandler> middlewares)
+			IEnumerable<IMiddlewareHandler> middlewares,
+            IPacketModuleBuilder packetModuleBuilder)
 		{
 			this.logger = logger;
-			this.packetHandlers = packetHandlers;
 			this.serverInformation = serverInformation;
 			this.packetSerialiser = packetSerialiser;
 			this.middlewares = middlewares.ToList();
@@ -54,6 +55,21 @@ namespace Networker.Server
 				{
 					Serialiser = packetSerialiser
 				});
+
+
+            var registries = packetModuleBuilder.GetPacketRegistries();
+
+            _packetRegistries = new IPacketRegistry[registries.Max(e => e.Identifier)];
+
+            foreach (var packetRegistry in registries)
+            {
+                if (_packetRegistries[packetRegistry.Identifier] != null)
+                {
+                    //already exists
+                }
+
+                _packetRegistries[packetRegistry.Identifier] = packetRegistry;
+            }
 		}
 
 		public async Task ProcessFromBuffer(ISender sender,
@@ -69,67 +85,30 @@ namespace Networker.Server
 				length = buffer.Length;
 
 			while (bytesRead < length)
-			{
-				var packetNameSize = packetSerialiser.CanReadName
-					? BitConverter.ToInt32(buffer, currentPosition)
-					: 0;
+            {
+                var packetIdentifier = BitConverter.ToInt32(buffer, currentPosition);
+                currentPosition += 4;
 
-				if (packetSerialiser.CanReadName) currentPosition += 4;
-
-				var packetSize = packetSerialiser.CanReadLength
+                var packetSize = packetSerialiser.CanReadLength
 					? BitConverter.ToInt32(buffer, currentPosition)
 					: 0;
 
 				if (packetSerialiser.CanReadLength) currentPosition += 4;
 
 				try
-				{
-					var packetTypeName = "Default";
-
-					if (packetSerialiser.CanReadName)
-						packetTypeName = Encoding.ASCII.GetString(buffer, currentPosition, packetNameSize);
-
-					var packetHandlerDictionary = packetHandlers.GetPacketHandlers();
-
-					if (!packetHandlerDictionary.ContainsKey(packetTypeName))
-					{
-						logger.LogWarning(
-							$"Could not handle packet {packetTypeName}. Make sure you have registered a handler");
-						return;
-					}
-
-					var packetHandler = packetHandlerDictionary[packetTypeName];
-
-					if (string.IsNullOrEmpty(packetTypeName))
-					{
-						if (isTcp)
-							serverInformation.InvalidTcpPackets++;
-						else
-							serverInformation.InvalidUdpPackets++;
-
-						return;
-					}
-
-					if (packetSerialiser.CanReadName) currentPosition += packetNameSize;
-
-					var packetContext = packetContextObjectPool.Pop();
-					packetContext.PacketName = packetTypeName;
+                {
+                    var packetRegistry = _packetRegistries[packetIdentifier];
+                    var packetContext = packetContextObjectPool.Pop();
 					packetContext.Sender = sender;
-					packetContext.Handler = packetHandler;
+					packetContext.Registry = packetRegistry;
 
-					if (packetSerialiser.CanReadOffset)
-					{
-						//todo: Fix
-						//packetContext.PacketBytes = buffer;
-						//packetHandler.Handle(buffer, currentPosition, packetSize, packetContext).GetAwaiter().GetResult();
-					}
-					else
-					{
-						packetContext.PacketBytes = new byte[packetSize];
-						Buffer.BlockCopy(buffer, currentPosition, packetContext.PacketBytes, 0, packetSize);
-					}
-					
-					await packetHandler.Handle(packetContext);
+                    Array.Clear(packetContext.PacketBytes, 0, packetContext.PacketBytes.Length);
+                    Buffer.BlockCopy(buffer, currentPosition, packetContext.PacketBytes, 0, packetSize);
+
+                    foreach (var registryPacketHandlerType in packetContext.Registry.PacketHandlers)
+                    {
+                        await registryPacketHandlerType.Handle(packetContext);
+                    }
 
 					packetContextObjectPool.Push(packetContext);
 				}
@@ -140,10 +119,8 @@ namespace Networker.Server
 
 				if (packetSerialiser.CanReadLength) currentPosition += packetSize;
 
-				bytesRead += packetSize + packetNameSize;
-
-				if (packetSerialiser.CanReadName) bytesRead += 4;
-
+				bytesRead += packetSize;
+                
 				if (packetSerialiser.CanReadLength) bytesRead += 4;
 
 				if (isTcp)

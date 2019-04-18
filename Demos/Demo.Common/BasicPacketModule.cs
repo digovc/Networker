@@ -7,7 +7,7 @@ namespace Demo.Common
 		public void Register(IPacketModuleBuilder builder)
 		{
 			builder.ConfigurePacket<BasicPacket>()
-				.UseIdentifier("A");
+				.UseIdentifier(1);
 		}
 	}
 }

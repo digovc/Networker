@@ -48,7 +48,7 @@ namespace Networker.Extensions.ProtobufNet
 			return new byte[] { };
 		}
 
-		public byte[] Serialise<T>(T packet) where T : class
+		public byte[] Serialise<T>(int identifier, T packet) where T : class
 		{
 			var memoryStream = memoryStreamObjectPool.Pop();
 

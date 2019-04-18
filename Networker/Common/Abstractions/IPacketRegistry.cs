@@ -7,12 +7,13 @@ namespace Networker.Common.Abstractions
 	{
 		Type PacketType { get; }
 		List<Type> PacketHandlerTypes { get; }
-		object Identifier { get; }
+        List<IPacketHandler> PacketHandlers { get; }
+		int Identifier { get; }
 	}
 
 	public interface IPacketRegistry<T> : IPacketRegistry where T : class
 	{
-		IPacketRegistry<T> UseIdentifier(string identifier);
+		IPacketRegistry<T> UseIdentifier(int identifier);
 		IPacketRegistry<T> UseHandler<TPacketHandler>() where TPacketHandler : IPacketHandler;
 	}
 }

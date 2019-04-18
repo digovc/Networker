@@ -8,7 +8,7 @@ namespace Networker.Common
 	{
 		public Type PacketType { get; private set; }
 		public List<Type> PacketHandlerTypes { get; private set; }
-		public object Identifier { get; private set; }
+		public int Identifier { get; private set; }
 		public List<IPacketHandler> PacketHandlers { get; set; }
 
 		public PacketRegistry()
@@ -17,7 +17,7 @@ namespace Networker.Common
 			PacketHandlers = new List<IPacketHandler>();
 		}
 
-		public IPacketRegistry<T> UseIdentifier(string identifier)
+		public IPacketRegistry<T> UseIdentifier(int identifier)
 		{
 			Identifier = identifier;
 			return this;

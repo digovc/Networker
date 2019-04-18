@@ -26,5 +26,10 @@ namespace Networker.Common
 
 			return PacketRegistries[typeName] as IPacketRegistry<T>;
 		}
-	}
+
+        public List<IPacketRegistry> GetPacketRegistries()
+        {
+            return PacketRegistries.Select(e => e.Value).ToList();
+        }
+    }
 }

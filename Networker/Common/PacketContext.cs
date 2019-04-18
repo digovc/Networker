@@ -6,13 +6,12 @@ namespace Networker.Common
 	public class PacketContext : IPacketContext
 	{
 		public Dictionary<string, object> Data { get; set; }
-		public IPacketHandler Handler { get; set; }
 		public byte[] PacketBytes { get; set; }
-		public string PacketName { get; set; }
 		public ISender Sender { get; set; }
 		public IPacketSerialiser Serialiser { get; set; }
+        public IPacketRegistry Registry { get; set; }
 
-		public T GetData<T>(string name)
+        public T GetData<T>(string name)
 			where T : class
 		{
 			if (Data.ContainsKey(name)) return Data[name] as T;

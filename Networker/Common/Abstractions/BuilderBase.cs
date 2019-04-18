@@ -14,8 +14,7 @@ namespace Networker.Common.Abstractions
 		private Action<ILoggingBuilder> loggingBuilder;
 
 		//Modules
-		protected PacketHandlerModule module;
-		protected List<IPacketHandlerModule> modules;
+        private List<IPacketModule> modules;
 
 		//Builder Options
 		protected TBuilderOptions options;
@@ -29,9 +28,7 @@ namespace Networker.Common.Abstractions
 		{
 			options = Activator.CreateInstance<TBuilderOptions>();
 			serviceCollection = new ServiceCollection();
-			modules = new List<IPacketHandlerModule>();
-			module = new PacketHandlerModule();
-			modules.Add(module);
+			modules = new List<IPacketModule>();
 		}
 
 		public abstract TResult Build();
@@ -64,18 +61,6 @@ namespace Networker.Common.Abstractions
 			if (PacketSerialiserProvider.PacketSerialiser == null)
 				throw new Exception("No packet serialiser has been configured for Networker");
 
-			var packetHandlers = serviceProvider.GetService<IPacketHandlers>();
-			foreach (var packetHandlerModule in modules)
-			foreach (var packetHandler in packetHandlerModule.GetPacketHandlers())
-				packetHandlers.Add(
-					PacketSerialiserProvider.PacketSerialiser.CanReadName ? packetHandler.Key.Name : "Default",
-					(IPacketHandler) serviceProvider.GetService(packetHandler.Value));
-
-			if (!PacketSerialiserProvider.PacketSerialiser.CanReadName && packetHandlers.GetPacketHandlers()
-				    .Count > 1)
-				throw new Exception(
-					"A PacketSerialiser which cannot identify a packet can only support up to one packet type");
-
 			return serviceProvider;
 		}
 
@@ -85,36 +70,17 @@ namespace Networker.Common.Abstractions
 			serviceCollection.AddSingleton<IMiddlewareHandler, T>();
 			return this as TBuilder;
 		}
-
-		public TBuilder RegisterPacketHandler<TPacket, TPacketHandler>()
-			where TPacket : class where TPacketHandler : IPacketHandler
-		{
-			module.AddPacketHandler<TPacket, TPacketHandler>();
-			return this as TBuilder;
-		}
-
-		public TBuilder RegisterPacketHandlerModule(IPacketHandlerModule packetHandlerModule)
-		{
-			modules.Add(packetHandlerModule);
-			return this as TBuilder;
-		}
-
-		public TBuilder RegisterPacketHandlerModule<T>()
-			where T : IPacketHandlerModule
-		{
-			modules.Add(Activator.CreateInstance<T>());
-			return this as TBuilder;
-		}
-
+        
 		public TBuilder RegisterModule(IPacketModule packetHandlerModule)
 		{
 			throw new NotImplementedException();
 		}
 
-		public TBuilder RegisterModule<T>() where T : IPacketModule
-		{
-			throw new NotImplementedException();
-		}
+		public TBuilder RegisterModule<T>() where T : class, IPacketModule
+        {
+            this.serviceCollection.AddSingleton<T>();
+            return this as TBuilder;
+        }
 
 		public TBuilder RegisterTypes(Action<IServiceCollection> serviceCollection)
 		{
@@ -166,10 +132,6 @@ namespace Networker.Common.Abstractions
 
 		protected void SetupSharedDependencies()
 		{
-			foreach (var packetHandlerModule in modules)
-			foreach (var packetHandler in packetHandlerModule.GetPacketHandlers())
-				serviceCollection.AddSingleton(packetHandler.Value);
-
 			serviceCollection.AddSingleton(options);
 			serviceCollection.AddSingleton<IPacketHandlers, PacketHandlers>();
 
@@ -177,6 +139,7 @@ namespace Networker.Common.Abstractions
 
 			serviceCollection.AddLogging(loggingBuilder);
 			serviceCollectionFactory?.Invoke(serviceCollection);
+
 		}
 	}
 }
