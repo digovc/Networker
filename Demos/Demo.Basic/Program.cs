@@ -22,7 +22,6 @@ namespace Demo.Basic
 					loggingBuilder.SetMinimumLevel(
 						LogLevel.Debug);
 				})
-				.RegisterModule<BasicPacketModule>()
 				.Build();
 
 			server.Start();
@@ -33,7 +32,6 @@ namespace Demo.Basic
 					.UseTcp(1000)
 					.UseUdp(5000)
 					.UseJson()
-                    .RegisterModule<BasicPacketModule>()
                     .Build();
 
 				client.Connect();

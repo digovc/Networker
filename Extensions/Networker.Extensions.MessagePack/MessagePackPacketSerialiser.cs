@@ -13,7 +13,7 @@ namespace Networker.Extensions.MessagePack
 
 		public bool CanReadOffset => false;
 
-		public T Deserialise<T>(byte[] packetBytes) 
+		public T Deserialise<T>(byte[] packetBytes) where T : class
 		{
 			return MessagePackSerializer.Deserialize<T>(packetBytes);
 		}
@@ -41,17 +41,15 @@ namespace Networker.Extensions.MessagePack
 			}
 		}
 
-		public byte[] Serialise<T>(T packet)
-		{
+		public byte[] Serialise<T>(T packet) where T : PacketBase
+        {
 			using (var memoryStream = new MemoryStream())
 			{
 				using (var binaryWriter = new BinaryWriter(memoryStream))
 				{
-					var nameBytes = Encoding.ASCII.GetBytes(typeof(T).Name);
 					var serialised = MessagePackSerializer.Serialize(packet);
-					binaryWriter.Write(nameBytes.Length);
+					binaryWriter.Write(packet.Identifier);
 					binaryWriter.Write(serialised.Length);
-					binaryWriter.Write(nameBytes);
 					binaryWriter.Write(serialised);
 				}
 

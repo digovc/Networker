@@ -27,7 +27,6 @@ namespace Tutorial.Client
 					loggingBuilder.AddConsole();
 				})
 				.UseProtobufNet()
-				.RegisterPacketHandler<ChatPacket, ClientChatPacketHandler>()
 				.Build();
 		}
  

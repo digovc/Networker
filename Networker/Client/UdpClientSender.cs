@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using Networker.Client.Abstractions;
+using Networker.Common.Abstractions;
 using Networker.Server.Abstractions;
 
 namespace Networker.Client
@@ -14,8 +15,8 @@ namespace Networker.Client
 			clientPacketProcessor.SetUdpSocketSender(this);
 		}
 
-		public void Broadcast<T>(T packet) where T : class
-		{
+		public void Broadcast<T>(T packet) where T : PacketBase
+        {
 			_client.SendUdp(packet);
 		}
 
@@ -24,8 +25,8 @@ namespace Networker.Client
 			_client.SendUdp(packetBytes);
 		}
 
-		public void SendTo<T>(T packet, IPEndPoint endpoint) where T : class
-		{
+		public void SendTo<T>(T packet, IPEndPoint endpoint) where T : PacketBase
+        {
 			_client.SendUdp(packet);
 		}
 	}

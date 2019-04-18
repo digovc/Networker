@@ -1,4 +1,5 @@
 ﻿using System;
+using Networker.Common.Abstractions;
 
 namespace Networker.Server.Abstractions
 {
@@ -12,7 +13,7 @@ namespace Networker.Server.Abstractions
         EventHandler<TcpConnectionConnectedEventArgs> ClientConnected { get; set; }
         EventHandler<TcpConnectionDisconnectedEventArgs> ClientDisconnected { get; set; }
 
-        void Broadcast<T>(T packet) where T : class;
+        void Broadcast<T>(T packet) where T : PacketBase;
         // void Broadcast(byte[] packet);
 
         void Start();

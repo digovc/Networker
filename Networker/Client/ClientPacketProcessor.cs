@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Linq;
+using System.Net.Sockets;
+using Microsoft.Extensions.Logging;
 using Networker.Client.Abstractions;
 using Networker.Common;
 using Networker.Common.Abstractions;
 using Networker.Server.Abstractions;
-using System;
-using System.Net.Sockets;
-using System.Text;
 
 namespace Networker.Client
 {
@@ -14,23 +14,22 @@ namespace Networker.Client
         private readonly ObjectPool<byte[]> bytePool;
         private readonly ILogger logger;
         private readonly ClientBuilderOptions options;
-        private readonly IPacketHandlers packetHandlers;
         private readonly IPacketSerialiser packetSerialiser;
         private readonly ObjectPool<ISender> tcpSenderObjectPool;
         private readonly ObjectPool<ISender> udpSenderObjectPool;
+        private readonly ObjectPool<IPacketContext> _packetContextObjectPool;
+        private readonly IPacketRegistry[] _packetRegistries;
 
         private IUdpSocketSender _udpSocketSender;
-        private ObjectPool<IPacketContext> _packetContextObjectPool;
 
         public ClientPacketProcessor(ClientBuilderOptions options,
             IPacketSerialiser packetSerialiser,
             ILogger<ClientPacketProcessor> logger,
-            IPacketHandlers packetHandlers)
+            IPacketModuleBuilder packetModuleBuilder)
         {
             this.options = options;
             this.packetSerialiser = packetSerialiser;
             this.logger = logger;
-            this.packetHandlers = packetHandlers;
 
             tcpSenderObjectPool = new ObjectPool<ISender>(options.ObjectPoolSize);
 
@@ -45,14 +44,31 @@ namespace Networker.Client
             _packetContextObjectPool = new ObjectPool<IPacketContext>(options.ObjectPoolSize * 2);
 
             for (var i = 0; i < _packetContextObjectPool.Capacity; i++)
-                _packetContextObjectPool.Push(new PacketContext()
+                _packetContextObjectPool.Push(new PacketContext
                 {
-					Serialiser = this.packetSerialiser
+                    Serialiser = this.packetSerialiser
                 });
 
             bytePool = new ObjectPool<byte[]>(options.ObjectPoolSize);
 
             for (var i = 0; i < bytePool.Capacity; i++) bytePool.Push(new byte[options.PacketSizeBuffer]);
+
+            var registries = packetModuleBuilder.GetPacketRegistries();
+
+            if (registries.Any())
+            {
+                _packetRegistries = new IPacketRegistry[registries.Max(e => e.Identifier) + 1];
+
+                foreach (var packetRegistry in registries)
+                {
+                    if (_packetRegistries[packetRegistry.Identifier] != null)
+                    {
+                        //already exists
+                    }
+
+                    _packetRegistries[packetRegistry.Identifier] = packetRegistry;
+                }
+            }
         }
 
         public void Process(Socket socket)
@@ -115,33 +131,15 @@ namespace Networker.Client
 
             while (bytesRead < buffer.Length)
             {
-                var packetTypeNameLength = packetSerialiser.CanReadName
-                    ? BitConverter.ToInt32(buffer, currentPosition)
-                    : 0;
+                var packetRegistry = _packetRegistries[BitConverter.ToInt32(buffer, currentPosition)];
 
-                if (packetSerialiser.CanReadName) currentPosition += 4;
+                currentPosition += 4;
 
                 var packetSize = packetSerialiser.CanReadLength
                     ? BitConverter.ToInt32(buffer, currentPosition)
                     : 0;
 
                 if (packetSerialiser.CanReadLength) currentPosition += 4;
-
-                var packetTypeName = "Default";
-
-                if (packetSerialiser.CanReadName)
-                {
-                    packetTypeName = Encoding.ASCII.GetString(buffer, currentPosition, packetTypeNameLength);
-                    currentPosition += packetTypeNameLength;
-
-                    if (string.IsNullOrEmpty(packetTypeName))
-                    {
-                        //logger.Error(new Exception("Packet was lost - Invalid"));
-                        return;
-                    }
-                }
-
-                var packetHandler = packetHandlers.GetPacketHandlers()[packetTypeName];
 
                 if (packetSerialiser.CanReadLength && buffer.Length - bytesRead < packetSize)
                 {
@@ -151,27 +149,18 @@ namespace Networker.Client
 
                 var context = _packetContextObjectPool.Pop();
                 context.Sender = sender;
-				
-                if (packetSerialiser.CanReadOffset)
-                {
-                    context.PacketBytes = buffer;
-                    //packetHandler.Handle(buffer, currentPosition, packetSize, context).GetAwaiter().GetResult();
-					//Not required/supported right now
-                }
-                else
-                {
-                    var packetBytes = new byte[packetSize];
-                    Buffer.BlockCopy(buffer, currentPosition, packetBytes, 0, packetSize);
-                    context.PacketBytes = packetBytes;
-                    packetHandler.Handle(context).GetAwaiter().GetResult();
-                }
+
+                Array.Clear(context.PacketBytes, 0, context.PacketBytes.Length);
+                Buffer.BlockCopy(buffer, currentPosition, context.PacketBytes, 0, packetSize);
+                
+                packetRegistry.PacketHandler.Handle(context);
 
                 _packetContextObjectPool.Push(context);
 
                 currentPosition += packetSize;
-                bytesRead += packetSize + packetTypeNameLength;
+                currentPosition += 4;//ID
+                bytesRead += packetSize;
 
-                if (packetSerialiser.CanReadName) bytesRead += 4;
                 if (packetSerialiser.CanReadLength) bytesRead += 4;
             }
         }

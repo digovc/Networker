@@ -12,12 +12,11 @@ namespace Networker.Common.Abstractions
 		private IConfiguration configuration;
 
 		private Action<ILoggingBuilder> loggingBuilder;
-
-		//Modules
-        private List<IPacketModule> modules;
-
+        
 		//Builder Options
 		protected TBuilderOptions options;
+
+        protected IPacketModuleBuilder packetModuleBuilder;
 
 		//Service Collection
 		protected IServiceCollection serviceCollection;
@@ -28,7 +27,7 @@ namespace Networker.Common.Abstractions
 		{
 			options = Activator.CreateInstance<TBuilderOptions>();
 			serviceCollection = new ServiceCollection();
-			modules = new List<IPacketModule>();
+            this.packetModuleBuilder = new PacketModuleBuilder();
 		}
 
 		public abstract TResult Build();
@@ -72,13 +71,15 @@ namespace Networker.Common.Abstractions
 		}
         
 		public TBuilder RegisterModule(IPacketModule packetHandlerModule)
-		{
-			throw new NotImplementedException();
-		}
+        {
+            packetHandlerModule.Register(packetModuleBuilder);
+            return this as TBuilder;
+        }
 
 		public TBuilder RegisterModule<T>() where T : class, IPacketModule
         {
-            this.serviceCollection.AddSingleton<T>();
+            RegisterModule(Activator.CreateInstance<T>());
+
             return this as TBuilder;
         }
 
@@ -133,12 +134,17 @@ namespace Networker.Common.Abstractions
 		protected void SetupSharedDependencies()
 		{
 			serviceCollection.AddSingleton(options);
-			serviceCollection.AddSingleton<IPacketHandlers, PacketHandlers>();
 
 			if (loggingBuilder == null) loggingBuilder = loggerBuilderFactory => { };
 
 			serviceCollection.AddLogging(loggingBuilder);
 			serviceCollectionFactory?.Invoke(serviceCollection);
+            serviceCollection.AddSingleton<IPacketModuleBuilder>(packetModuleBuilder);
+
+            foreach (var packetRegistry in packetModuleBuilder.GetPacketRegistries())
+            {
+                serviceCollection.AddSingleton(packetRegistry.PacketHandlerType);
+            }
 
 		}
 	}

@@ -23,7 +23,6 @@ namespace Demo.PacketModule
 					loggingBuilder.SetMinimumLevel(
 						LogLevel.Debug);
 				})
-				.RegisterModule<BasicPacketModule>()
 				.RegisterModule<BasicServerPacketModule>()
 				.Build();
 
@@ -36,20 +35,26 @@ namespace Demo.PacketModule
 					.UseTcp(1000)
 					.UseUdp(5000)
 					.UseJson()
-					.RegisterModule<BasicPacketModule>()
 					.Build();
 
 				client.Connect();
 
-				Task.Factory.StartNew(() =>
-				{
-					while (true)
-					{
-						client.Send(new BasicPacket());
-						Thread.Sleep(10);
-					}
-				});
-			}
+                for (var i = 0; i < 4; i++)
+                {
+                    Task.Factory.StartNew(() =>
+                    {
+                        while (true)
+                        {
+                            client.Send(new BasicPacket
+                            {
+                                StringData = DateTime.UtcNow.ToString()
+                            });
+
+                            Thread.Sleep(1);
+                        }
+                    });
+                }
+            }
 			catch (Exception e)
 			{
 				Console.WriteLine(e);

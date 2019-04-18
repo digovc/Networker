@@ -14,8 +14,8 @@ namespace Networker.Common
 			PacketRegistries = new Dictionary<string, IPacketRegistry>();
 		}
 
-		public IPacketRegistry<T> ConfigurePacket<T>() where T : class
-		{
+		public IPacketRegistry<T> ConfigurePacket<T>() where T : PacketBase
+        {
 			var typeName = typeof(T).Name;
 
 			if (!PacketRegistries.ContainsKey(typeName))

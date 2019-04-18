@@ -48,8 +48,8 @@ namespace Networker.Extensions.ProtobufNet
 			return new byte[] { };
 		}
 
-		public byte[] Serialise<T>(int identifier, T packet) where T : class
-		{
+		public byte[] Serialise<T>(T packet) where T : PacketBase
+        {
 			var memoryStream = memoryStreamObjectPool.Pop();
 
 			memoryStream.SetLength(0);

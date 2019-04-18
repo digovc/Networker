@@ -27,7 +27,6 @@ namespace Networker.Server
 
 		public ServerPacketProcessor(ServerBuilderOptions options,
 			ILogger<ServerPacketProcessor> logger,
-			IPacketHandlers packetHandlers,
 			IServerInformation serverInformation,
 			IPacketSerialiser packetSerialiser,
 			IEnumerable<IMiddlewareHandler> middlewares,
@@ -53,24 +52,27 @@ namespace Networker.Server
 			for (var i = 0; i < packetContextObjectPool.Capacity; i++)
 				packetContextObjectPool.Push(new PacketContext
 				{
-					Serialiser = packetSerialiser
+					Serialiser = packetSerialiser,
+                    PacketBytes = new byte[500000]
 				});
-
-
+            
             var registries = packetModuleBuilder.GetPacketRegistries();
 
-            _packetRegistries = new IPacketRegistry[registries.Max(e => e.Identifier)];
-
-            foreach (var packetRegistry in registries)
+            if (registries.Any())
             {
-                if (_packetRegistries[packetRegistry.Identifier] != null)
-                {
-                    //already exists
-                }
+                _packetRegistries = new IPacketRegistry[registries.Max(e => e.Identifier) + 1];
 
-                _packetRegistries[packetRegistry.Identifier] = packetRegistry;
+                foreach (var packetRegistry in registries)
+                {
+                    if (_packetRegistries[packetRegistry.Identifier] != null)
+                    {
+                        //already exists
+                    }
+
+                    _packetRegistries[packetRegistry.Identifier] = packetRegistry;
+                }
             }
-		}
+        }
 
 		public async Task ProcessFromBuffer(ISender sender,
 			byte[] buffer,
@@ -105,10 +107,7 @@ namespace Networker.Server
                     Array.Clear(packetContext.PacketBytes, 0, packetContext.PacketBytes.Length);
                     Buffer.BlockCopy(buffer, currentPosition, packetContext.PacketBytes, 0, packetSize);
 
-                    foreach (var registryPacketHandlerType in packetContext.Registry.PacketHandlers)
-                    {
-                        await registryPacketHandlerType.Handle(packetContext);
-                    }
+                    await packetRegistry.PacketHandler.Handle(packetContext);
 
 					packetContextObjectPool.Push(packetContext);
 				}
@@ -120,8 +119,8 @@ namespace Networker.Server
 				if (packetSerialiser.CanReadLength) currentPosition += packetSize;
 
 				bytesRead += packetSize;
-                
-				if (packetSerialiser.CanReadLength) bytesRead += 4;
+                bytesRead += 4;//For ID
+                if (packetSerialiser.CanReadLength) bytesRead += 4;
 
 				if (isTcp)
 					serverInformation.ProcessedTcpPackets++;

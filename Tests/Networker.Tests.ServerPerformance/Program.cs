@@ -39,7 +39,6 @@ namespace Networker.Tests.ServerPerformance
 						loggingBuilder.SetMinimumLevel(
 							LogLevel.Debug);
 					})
-					.RegisterPacketHandler<PerformancePacket, PerformancePacketHandler>()
 					.RegisterTypes(collection => { collection.AddSingleton<IPacketSerialiser, DoNothingSerialiser>(); })
 					.Build();
 

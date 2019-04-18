@@ -36,8 +36,8 @@ namespace Networker.Tests.ServerPerformance
 			throw new NotImplementedException();
 		}
 
-		public byte[] Serialise<T>(T packet) where T : class
-		{
+		public byte[] Serialise<T>(T packet) where T : PacketBase
+        {
 			return _bytes;
 		}
 	}

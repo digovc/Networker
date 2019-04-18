@@ -28,7 +28,6 @@ namespace Tutorial.Server
 					loggingBuilder.AddConsole();
 				})
 				.UseProtobufNet()
-				.RegisterPacketHandler<ChatPacket, ChatPacketHandler>()
 				.Build();
  
 			server.Start();

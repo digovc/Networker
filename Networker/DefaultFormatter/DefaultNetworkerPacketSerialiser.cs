@@ -28,8 +28,8 @@ namespace Networker.DefaultFormatter
 			throw new NotImplementedException();
 		}
 
-		public byte[] Serialise<T>(T packet)where T : class
-		{
+		public byte[] Serialise<T>(T packet)where T : PacketBase
+        {
 			throw new NotImplementedException();
 			var bf = new BinaryFormatter();
 			using (var ms = new MemoryStream())

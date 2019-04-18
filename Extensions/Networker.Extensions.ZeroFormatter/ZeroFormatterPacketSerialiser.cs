@@ -41,8 +41,8 @@ namespace Networker.Extensions.ZeroFormatter
 			}
 		}
 
-		public byte[] Serialise<T>(T packet) where T : class
-		{
+		public byte[] Serialise<T>(T packet) where T : PacketBase
+        {
 			using (var memoryStream = new MemoryStream())
 			{
 				using (var binaryWriter = new BinaryWriter(memoryStream))

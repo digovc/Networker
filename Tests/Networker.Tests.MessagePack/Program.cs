@@ -13,7 +13,6 @@ namespace Networker.Tests.MessagePack
         {
             var server = new ServerBuilder().
 				UseTcp(1000).
-				RegisterPacketHandler<PingPacket, PingPacketHandler>().
                 UseMessagePack().
                 ConfigureLogging(loggingBuilder =>
                 {

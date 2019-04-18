@@ -16,7 +16,7 @@ namespace Demo.Common
 
 		public override async Task Process(BasicPacket packet, IPacketContext packetContext)
 		{
-			logger.LogDebug("Handling Basic Packet");
+			logger.LogDebug("Handling Basic Packet " + packet.StringData);
 		}
 	}
 }

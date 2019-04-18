@@ -69,7 +69,7 @@ namespace Networker.Server
             });
         }
 
-        public void Broadcast<T>(T packet) where T : class => Broadcast(packetSerialiser.Serialise(packet));
+        public void Broadcast<T>(T packet) where T : PacketBase => Broadcast(packetSerialiser.Serialise(packet));
         public void Broadcast(byte[] packet)
         {
             if (UdpListener == null) throw new Exception("UDP is not enabled");

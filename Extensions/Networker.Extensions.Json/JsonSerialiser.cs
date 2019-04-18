@@ -40,14 +40,14 @@ namespace Networker.Extensions.Json
 			}
 		}
 
-		public byte[] Serialise<T>(int identifier, T packet) where T : class
-		{
+		public byte[] Serialise<T>(T packet) where T : PacketBase
+        {
 			using (var memoryStream = new MemoryStream())
 			{
 				using (var binaryWriter = new BinaryWriter(memoryStream))
 				{
 					var serialised = JsonSerializer.Serialize(packet);
-					binaryWriter.Write(identifier);
+					binaryWriter.Write(packet.Identifier);
 					binaryWriter.Write(serialised.Length);
 					binaryWriter.Write(serialised);
 				}
